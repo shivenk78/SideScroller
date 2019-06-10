@@ -79,7 +79,11 @@ public class GameRunner extends JPanel implements KeyListener,Runnable
 		Graphics2D g2d = (Graphics2D)g;
 
 		g2d.setColor(Color.BLACK);
-        g2d.drawImage(marine.getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), null);
+		if(marine.right){
+			g2d.drawImage(marine.getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), null);
+		}else{
+			g2d.drawImage(marine.getImage().getScaledInstance(-100, 100, Image.SCALE_DEFAULT), marine.getX()+marine.getImage().getWidth(),marine.getY(), null);
+		}
 		g2d.setColor(Color.MAGENTA);
 		GradientPaint gp = new GradientPaint((float)0.0, (float)0.0, Color.BLUE, (float)500.0, (float)500, Color.WHITE, true);
 		g2d.setPaint(gp);

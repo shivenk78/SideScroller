@@ -20,4 +20,20 @@ public class ImageChopper {
         }
         return result;
     }
+
+    public static BufferedImage[] chop(File file, int imageWidth, int imageHeight){
+        BufferedImage initial;
+        BufferedImage[] result = new BufferedImage[1];
+        try {
+            initial = ImageIO.read(file);
+            int frameCount = initial.getWidth()/imageWidth;
+            result = new BufferedImage[frameCount];
+            for(int i=0; i<frameCount; i++){
+                result[i]=initial.getSubimage(imageWidth*i,0,imageWidth,imageHeight);
+            }
+		}
+		catch (IOException e) {
+        }
+        return result;
+    }
 }

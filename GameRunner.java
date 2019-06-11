@@ -1,48 +1,45 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.lang.*;
 import java.math.*;
 import java.awt.image.*;
 import java.applet.*;
 import javax.swing.border.*;
+
 import javax.imageio.ImageIO;
-public class GameRunner extends JPanel implements KeyListener,Runnable
-{
+
+public class GameRunner extends JPanel implements KeyListener, Runnable {
 	private float angle;
-	private int x;
-	private int y;
+	private int skyX, bgX;
 	private JFrame frame;
 	private Thread t;
-	private boolean gameOn;
-	private boolean restart=false;
-	private int imgCount=0;
-	private Polygon poly;
-    private Polygon poly2;
-    
-    private Marine marine;
+	private boolean gameOn, right, left;
+	private boolean restart = false;
 
-	public GameRunner()
-	{
-		frame=new JFrame();
-		x=100;
-		y=100;
-        gameOn=true;
+	private BufferedImage sky, background;
+	private Marine marine;
 
-		poly2=new Polygon();
-		poly2.addPoint(1,4);
-		poly2.addPoint(2,5);
-		poly2.addPoint(3,6);
+	public GameRunner() {
+		frame = new JFrame();
+		gameOn = true;
 
 		frame.addKeyListener(this);
 		frame.add(this);
-		frame.setSize(800,500);
+		frame.setSize(1024, 704);
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setVisible(true);
-        
-        marine = new Marine(100,100);
+		setVisible(true);
+
+		marine = new Marine(100, 100);
+		try {
+			sky = ImageIO.read(new File("Environments/another-world/PNG/layered/sky.png"));
+			background = ImageIO.read(new File("Environments/another-world/PNG/layered/back-towers.png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		t=new Thread(this);
 		t.start();
@@ -54,8 +51,24 @@ public class GameRunner extends JPanel implements KeyListener,Runnable
 		{
 			if(gameOn)
 			{
-				//Math happens here!
-
+				//Sprite Movement
+				if(right){
+					marine.changeX(Marine.MOVE_SPEED);
+					skyX -= Marine.MOVE_SPEED/4;
+					bgX -= Marine.MOVE_SPEED/2;
+				}
+				if(left){
+					marine.changeX(-Marine.MOVE_SPEED);
+					skyX += Marine.MOVE_SPEED/4;
+					bgX += Marine.MOVE_SPEED/2;
+				}
+				if(!right && !left && marine.STATE != Marine.State.JUMP)
+					marine.STATE = Marine.State.IDLE;
+				
+				if(skyX<-sky.getWidth())
+					skyX += sky.getWidth(); 
+				if(bgX<-background.getWidth())
+					bgX += background.getWidth();
 
 				repaint();
 			}
@@ -78,33 +91,53 @@ public class GameRunner extends JPanel implements KeyListener,Runnable
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D)g;
 
-		g2d.setColor(Color.BLACK);
-		if(marine.right){
-			g2d.drawImage(marine.getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), null);
-		}else{
-			g2d.drawImage(marine.getImage().getScaledInstance(-100, 100, Image.SCALE_DEFAULT), marine.getX()+marine.getImage().getWidth(),marine.getY(), null);
-		}
-		g2d.setColor(Color.MAGENTA);
-		GradientPaint gp = new GradientPaint((float)0.0, (float)0.0, Color.BLUE, (float)500.0, (float)500, Color.WHITE, true);
-		g2d.setPaint(gp);
-		g2d.drawLine(100,100,500,500);
+		//Draw Background Layers
+		g2d.drawImage(sky, skyX, 0, null);
+		g2d.drawImage(sky, skyX+sky.getWidth(), 0, null);
+		g2d.drawImage(background, bgX, 0, null);
+		g2d.drawImage(background, bgX+background.getWidth(), 0, null);
 
+		//Draw Sprites
+		if(marine.right){
+			g2d.drawImage(marine.getImage().getScaledInstance(-100, 100, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), 100, 100, null);
+		}else{
+			g2d.drawImage(marine.getImage().getScaledInstance(-100, 100, Image.SCALE_DEFAULT), marine.getX()+100,marine.getY(), -100, 100, null);
+		}
 	}
 	public void keyPressed(KeyEvent key)
 	{
-		System.out.println(key.getKeyCode());
-		if(key.getKeyCode()==39)
-		{
-			x+=5;
-			imgCount++;
-			if(imgCount>10)
-				imgCount=0;
+		//37 left, 38 up, 39 right, 40 down
+		if(key.getKeyCode()==37){	//Left
+			if(!right){
+				right = false;
+				left = true;
+				marine.right = false;
+			}
+			marine.STATE = Marine.State.RUN;
+		}
+		if(key.getKeyCode()==39){	//Right
+			marine.right = true;
+			if(!left){
+				right = true;
+				left = false;
+				marine.right = true;
+			}
+			marine.STATE = Marine.State.RUN;
+		}
+		if(key.getKeyCode()==32){	//Space
+			marine.STATE = Marine.State.JUMP;
 		}
 		if(key.getKeyCode()==82)
 			restart=true;
 	}
 	public void keyReleased(KeyEvent key)
 	{
+		if(key.getKeyCode()==37){	//Left
+			left = false;
+		}
+		if(key.getKeyCode()==39){	//Right
+			right = false;
+		}
 	}
 	public void keyTyped(KeyEvent key)
 	{

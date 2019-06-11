@@ -13,7 +13,7 @@ import javax.imageio.ImageIO;
 
 public class GameRunner extends JPanel implements KeyListener, Runnable {
 	private float angle;
-	private int skyX, bgX;
+	private int skyX, bgX, jumpTimer;
 	private JFrame frame;
 	private Thread t;
 	private boolean gameOn, right, left;
@@ -41,6 +41,8 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			e.printStackTrace();
 		}
 
+		jumpTimer = 0;
+
 		t=new Thread(this);
 		t.start();
 	}
@@ -64,7 +66,10 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 				}
 				if(!right && !left && marine.STATE != Marine.State.JUMP)
 					marine.STATE = Marine.State.IDLE;
-				
+				if(Marine.STATE == Marine.State.JUMP){
+					//TODO jump mechanic
+				}
+
 				if(skyX<-sky.getWidth())
 					skyX += sky.getWidth(); 
 				if(bgX<-background.getWidth())
@@ -125,7 +130,10 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			marine.STATE = Marine.State.RUN;
 		}
 		if(key.getKeyCode()==32){	//Space
-			marine.STATE = Marine.State.JUMP;
+			if(marine.STATE != Marine.State.JUMP){
+				jumpTimer = 0;
+				marine.STATE = Marine.State.JUMP;
+			}
 		}
 		if(key.getKeyCode()==82)
 			restart=true;

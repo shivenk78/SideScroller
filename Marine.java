@@ -73,6 +73,9 @@ public class Marine{
     public void changeX(int deltaX){
         this.x += deltaX;
     }
+    public void changeY(int deltaY){
+        this.y += deltaY;
+    }
 
     public int getX(){  return x;  }
     public int getY(){  return y;  }

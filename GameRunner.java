@@ -13,12 +13,13 @@ import javax.imageio.ImageIO;
 
 public class GameRunner extends JPanel implements KeyListener, Runnable {
 	private float angle;
-	private int skyX, bgX, jumpTimer;
+	private int skyX, bgX;
+	private int[][] locations;
+	private Block[][] blocks;
 	private JFrame frame;
 	private Thread t;
 	private boolean gameOn, right, left;
 	private boolean restart = false;
-
 	private BufferedImage sky, background;
 	private Marine marine;
 
@@ -28,12 +29,13 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 
 		frame.addKeyListener(this);
 		frame.add(this);
-		frame.setSize(1024, 704);
+		frame.setSize(1024, 750);
 		frame.setVisible(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
 
-		marine = new Marine(100, 100);
+		skyX = bgX = 0;
+		marine = new Marine(128, 704-192);
 		try {
 			sky = ImageIO.read(new File("Environments/another-world/PNG/layered/sky.png"));
 			background = ImageIO.read(new File("Environments/another-world/PNG/layered/back-towers.png"));
@@ -41,7 +43,15 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			e.printStackTrace();
 		}
 
-		jumpTimer = 0;
+		locations = Block.readMap("map.txt");
+		blocks = new Block[locations.length][locations[0].length];
+		for(int r=0; r<locations.length; r++){
+			for(int c=0; c<locations[r].length; c++){
+				blocks[r][c] = new Block(128*c, 128*r, (locations[r][c] == 1));
+				System.out.print(locations[r][c]+" ");
+			}
+			System.out.println("");
+		}
 
 		t=new Thread(this);
 		t.start();
@@ -55,20 +65,17 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			{
 				//Sprite Movement
 				if(right){
-					marine.changeX(Marine.MOVE_SPEED);
 					skyX -= Marine.MOVE_SPEED/4;
 					bgX -= Marine.MOVE_SPEED/2;
+					Block.changeAllX(blocks, -Marine.MOVE_SPEED);
 				}
 				if(left){
-					marine.changeX(-Marine.MOVE_SPEED);
 					skyX += Marine.MOVE_SPEED/4;
 					bgX += Marine.MOVE_SPEED/2;
+					Block.changeAllX(blocks, Marine.MOVE_SPEED);
 				}
 				if(!right && !left && marine.STATE != Marine.State.JUMP)
 					marine.STATE = Marine.State.IDLE;
-				if(Marine.STATE == Marine.State.JUMP){
-					//TODO jump mechanic
-				}
 
 				if(skyX<-sky.getWidth())
 					skyX += sky.getWidth(); 
@@ -99,51 +106,62 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		//Draw Background Layers
 		g2d.drawImage(sky, skyX, 0, null);
 		g2d.drawImage(sky, skyX+sky.getWidth(), 0, null);
+		g2d.drawImage(sky, skyX-sky.getWidth(), 0, null);
 		g2d.drawImage(background, bgX, 0, null);
 		g2d.drawImage(background, bgX+background.getWidth(), 0, null);
+		g2d.drawImage(background, bgX-background.getWidth(), 0, null);
+
+		//Draw Map Blocks
+		for(int r=0; r<locations.length; r++){
+			for(int c=0; c<locations[r].length; c++){
+				Block b = blocks[r][c];
+				if(b.isVisible())
+					g2d.drawImage(b.getImage().getScaledInstance(128, 128, Image.SCALE_DEFAULT), b.getX(), b.getY(), 128, 128, null);
+			}
+		}
 
 		//Draw Sprites
 		if(marine.right){
-			g2d.drawImage(marine.getImage().getScaledInstance(-100, 100, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), 100, 100, null);
+			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
 		}else{
-			g2d.drawImage(marine.getImage().getScaledInstance(-100, 100, Image.SCALE_DEFAULT), marine.getX()+100,marine.getY(), -100, 100, null);
+			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX()+128,marine.getY(), -marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
 		}
 	}
 	public void keyPressed(KeyEvent key)
 	{
 		//37 left, 38 up, 39 right, 40 down
-		if(key.getKeyCode()==37){	//Left
+		if(key.getKeyCode()==37 || key.getKeyCode()==65){	//Left || A
 			if(!right){
 				right = false;
 				left = true;
 				marine.right = false;
 			}
-			marine.STATE = Marine.State.RUN;
+			if(marine.STATE != Marine.State.JUMP)
+				marine.STATE = Marine.State.RUN;
 		}
-		if(key.getKeyCode()==39){	//Right
+		if(key.getKeyCode()==39 || key.getKeyCode()==68){	//Right || D
 			marine.right = true;
 			if(!left){
 				right = true;
 				left = false;
 				marine.right = true;
 			}
-			marine.STATE = Marine.State.RUN;
+			if(marine.STATE != Marine.State.JUMP)
+				marine.STATE = Marine.State.RUN;
 		}
 		if(key.getKeyCode()==32){	//Space
-			if(marine.STATE != Marine.State.JUMP){
-				jumpTimer = 0;
-				marine.STATE = Marine.State.JUMP;
-			}
+			if(marine.STATE != Marine.State.JUMP)
+				marine.jump(marine.STATE);
 		}
 		if(key.getKeyCode()==82)
 			restart=true;
 	}
 	public void keyReleased(KeyEvent key)
 	{
-		if(key.getKeyCode()==37){	//Left
+		if(key.getKeyCode()==37 || key.getKeyCode()==65){	//Left || A
 			left = false;
 		}
-		if(key.getKeyCode()==39){	//Right
+		if(key.getKeyCode()==39 || key.getKeyCode()==68){	//Right || D
 			right = false;
 		}
 	}

@@ -8,12 +8,15 @@ import java.util.Arrays;
 public class Marine{
 
     public static final int MOVE_SPEED = 10;
+    public static final int JUMP_HEIGHT = 14;
+    private static final int JUMP_SPEED = 16;
 
     public State STATE;
     public boolean right;
 
+    private State lastState;
     private BufferedImage[] idles, runs, jumps;
-    private int index, x, y, slowCount, jumpCount;
+    private int index, x, y, slowCount, jumpCount, jumpTimer;
 
     public Marine(int x, int y){
         right = true;
@@ -27,6 +30,14 @@ public class Marine{
         runs = new BufferedImage[10];
         runs = Arrays.copyOfRange((ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-run.png"), 48)), 1, 11);
         jumps = ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-jump.png"), 36, 48);
+    }
+
+    public void jump(Marine.State prevState){
+        if(STATE != State.JUMP){
+            STATE = State.JUMP;
+            jumpTimer = 0;
+            lastState = prevState;
+        }
     }
 
     public BufferedImage getImage(){
@@ -59,11 +70,11 @@ public class Marine{
                 if(slowCount>FRAME_DELAY){
                     index++;
                     slowCount=0;
-                    jumpCount++;
+                    /*jumpCount++;
                     if(jumpCount>=6){
                         STATE = State.IDLE;
                         jumpCount = 0;
-                    }
+                    }*/
                 }
                 return img;
             default: return img;
@@ -78,7 +89,23 @@ public class Marine{
     }
 
     public int getX(){  return x;  }
-    public int getY(){  return y;  }
+    public int getY(){
+        if(STATE == State.JUMP){
+            if(jumpTimer > 2*JUMP_HEIGHT){
+                jumpTimer = 0;
+                STATE = lastState;
+            }
+            if(jumpTimer < JUMP_HEIGHT){
+                jumpTimer++;
+                y -= JUMP_SPEED;
+            }
+            if(jumpTimer >= JUMP_HEIGHT ){
+                jumpTimer++;
+                y += JUMP_SPEED;
+            }
+        }  
+        return y;  
+    }
 
     public enum State{
         IDLE, RUN, JUMP;

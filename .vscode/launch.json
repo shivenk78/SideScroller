@@ -5,6 +5,13 @@
             "name": "CodeLens (Launch) - GameRunner",
             "request": "launch",
             "mainClass": "GameRunner",
+            "projectName": "SideScroller_68dea532"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - GameRunner",
+            "request": "launch",
+            "mainClass": "GameRunner",
             "projectName": "SideScroller_747b8b81"
         }
     ]

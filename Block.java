@@ -2,13 +2,14 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.imageio.ImageIO;
 
-public class Block{
+public class Block extends Collider{
 
     private BufferedImage image;
     private int x, y;
     private boolean isVisible;
 
     public Block(int x, int y, boolean isVisible){
+        super(x, y, 128, 128);
         this.x = x;
         this.y = y;
         this.isVisible = isVisible;

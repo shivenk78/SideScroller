@@ -1,0 +1,7 @@
+public class Enemy extends Collider{
+
+    public Enemy(int x, int y){
+        
+    }
+
+}

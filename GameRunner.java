@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.util.ArrayList;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
@@ -22,6 +23,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 	private boolean restart = false;
 	private BufferedImage sky, background;
 	private Marine marine;
+	private ArrayList<Enemy> enemies;
 
 	public GameRunner() {
 		frame = new JFrame();
@@ -34,6 +36,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
 
+		enemies = new ArrayList<>();
 		skyX = bgX = 0;
 		marine = new Marine(128, 704-192);
 		try {
@@ -79,9 +82,17 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 
 				if(skyX<-sky.getWidth())
 					skyX += sky.getWidth(); 
+				if(skyX>2*sky.getWidth())
+					skyX -= sky.getWidth();
 				if(bgX<-background.getWidth())
 					bgX += background.getWidth();
+				if(bgX>2*sky.getWidth())
+					bgX -= sky.getWidth();
 
+				//Add Enemies Randomly (5% chance)
+				if(Math.random()>0.95){
+					enemies.add(new Enemy(marine.getX()+300, marine.getY()));
+				}
 				repaint();
 			}
 			if(restart)
@@ -125,6 +136,11 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
 		}else{
 			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX()+128,marine.getY(), -marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
+		}
+
+		//Draw Enemies
+		for(Enemy e : enemies){
+			g2d.drawImage(e.getImage().getScaledInstance(128, 128, Image.SCALE_DEFAULT), e.getX(), e.getY(), -128, 128, null);
 		}
 	}
 	public void keyPressed(KeyEvent key)

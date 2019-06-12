@@ -3,9 +3,10 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.util.Arrays;
 
-public class Marine{
+public class Marine extends Collider{
 
     public static final int MOVE_SPEED = 10;
     public static final int JUMP_HEIGHT = 14;
@@ -16,13 +17,17 @@ public class Marine{
 
     private State lastState;
     private BufferedImage[] idles, runs, jumps;
+    private Rectangle collider;
     private int index, x, y, slowCount, jumpCount, jumpTimer;
 
     public Marine(int x, int y){
+        super(x, y, 128, 128);
         right = true;
         this.x = x;
         this.y = y;
         slowCount = 0;
+
+        collider = new Rectangle(x, y, 128, 128);
 
         STATE = State.RUN;
         idles = new BufferedImage[4];
@@ -80,14 +85,13 @@ public class Marine{
             default: return img;
         }
     }
-
     public void changeX(int deltaX){
         this.x += deltaX;
     }
     public void changeY(int deltaY){
         this.y += deltaY;
     }
-
+    
     public int getX(){  return x;  }
     public int getY(){
         if(STATE == State.JUMP){

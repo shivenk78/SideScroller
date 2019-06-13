@@ -25,6 +25,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 	private Marine marine;
 	private ArrayList<Block> blockList;
 	private ArrayList<Enemy> enemies;
+	private static GameRunner gameRunner;
 
 	public GameRunner() {
 		frame = new JFrame();
@@ -40,7 +41,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		enemies = new ArrayList<>();
 		blockList = new ArrayList<>();
 		skyX = bgX = 0;
-		marine = new Marine(128, 704-198);
+		marine = new Marine(128, 704-192);
 		try {
 			sky = ImageIO.read(new File("Environments/another-world/PNG/layered/sky.png"));
 			background = ImageIO.read(new File("Environments/another-world/PNG/layered/back-towers.png"));
@@ -57,6 +58,9 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 					blockList.add(blocks[r][c]);
 			}
 		}
+
+		enemies.add(new Enemy(marine.getX()+1000, marine.getY()));
+		enemies.add(new Enemy(marine.getX()+2000, marine.getY()));
 
 		t=new Thread(this);
 		t.start();
@@ -91,13 +95,12 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 				if(bgX>2*sky.getWidth())
 					bgX -= sky.getWidth();
 
-				//Add Enemies Randomly (.5% chance)
-				if(Math.random()>0.995){
-					enemies.add(new Enemy(marine.getX()+300, marine.getY()));
-				}
 				//Move Enemies 
-				for(Enemy e : enemies)
-					e.changeX(-Marine.MOVE_SPEED/2);
+				for(Enemy e : enemies){
+					e.changeX(-Marine.MOVE_SPEED*2);
+					if(marine.getCollider().intersects(e.getCollider()))
+						restart = true;
+				}
 
 				//Player 'Gravity'
 				marine.changeY(marine.getYVel());
@@ -130,6 +133,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			if(restart)
 			{
 				restart=false;
+				System.exit(1);
 				gameOn=true;
 			}
 			try
@@ -169,8 +173,6 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		}else{
 			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX()+128,marine.getY(), -marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
 		}
-		g2d.setColor(Color.MAGENTA);
-		g2d.draw(marine.getCollider());
 
 		//Draw Enemies
 		for(Enemy e : enemies){
@@ -220,6 +222,6 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 	}
 	public static void main(String args[])
 	{
-		GameRunner app=new GameRunner();
+		gameRunner=new GameRunner();
 	}
 }

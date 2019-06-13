@@ -7,7 +7,7 @@ public class Enemy extends Collider {
     private BufferedImage[] ships;
 
     public Enemy(int x, int y){
-        super(x, y, 128, 128);
+        super(x, y, 80, 80);
         index = slowCount = 0;
 
         ships = new BufferedImage[8];

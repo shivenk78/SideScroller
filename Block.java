@@ -6,10 +6,12 @@ public class Block extends Collider{
 
     private BufferedImage image;
     private boolean isVisible;
+    private static int xCounter;
 
     public Block(int x, int y, boolean isVisible){
         super(x, y, 128, 128);
         this.isVisible = isVisible;
+        xCounter = 0;
 
         try {
             BufferedImage blockSheet = ImageIO.read(new File("Environments/another-world/PNG/layered/another-world-tileset.png"));
@@ -25,7 +27,8 @@ public class Block extends Collider{
     public static void changeAllX(Block[][] blocks, int deltaX){
         for(int r=0; r<blocks.length; r++)
 			for(int c=0; c<blocks[r].length; c++)
-				blocks[r][c].changeX(deltaX);
+                blocks[r][c].changeX(deltaX);
+        xCounter += deltaX;
     }
 
     public static int[][] readMap(String fileName){
@@ -48,5 +51,9 @@ public class Block extends Collider{
         }
         
         return arr;
+    }
+
+    public static int getXCounter(){
+        return xCounter;
     }
 }

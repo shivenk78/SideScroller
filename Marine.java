@@ -85,14 +85,7 @@ public class Marine extends Collider{
             default: return img;
         }
     }
-    public void changeX(int deltaX){
-        this.x += deltaX;
-    }
-    public void changeY(int deltaY){
-        this.y += deltaY;
-    }
-    
-    public int getX(){  return x;  }
+    @Override
     public int getY(){
         if(STATE == State.JUMP){
             if(jumpTimer > 2*JUMP_HEIGHT){

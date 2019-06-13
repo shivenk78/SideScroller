@@ -89,10 +89,13 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 				if(bgX>2*sky.getWidth())
 					bgX -= sky.getWidth();
 
-				//Add Enemies Randomly (5% chance)
-				if(Math.random()>0.95){
+				//Add Enemies Randomly (.5% chance)
+				if(Math.random()>0.995){
 					enemies.add(new Enemy(marine.getX()+300, marine.getY()));
 				}
+				//Move Enemies 
+				for(Enemy e : enemies)
+					e.changeX(-Marine.MOVE_SPEED/2);
 				repaint();
 			}
 			if(restart)

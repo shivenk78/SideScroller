@@ -19,10 +19,11 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 	private Block[][] blocks;
 	private JFrame frame;
 	private Thread t;
-	private boolean gameOn, right, left;
+	private boolean gameOn, right, left, rightLock, leftLock, blockUnder;
 	private boolean restart = false;
 	private BufferedImage sky, background;
 	private Marine marine;
+	private ArrayList<Block> blockList;
 	private ArrayList<Enemy> enemies;
 
 	public GameRunner() {
@@ -37,8 +38,9 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		setVisible(true);
 
 		enemies = new ArrayList<>();
+		blockList = new ArrayList<>();
 		skyX = bgX = 0;
-		marine = new Marine(128, 704-192);
+		marine = new Marine(128, 704-198);
 		try {
 			sky = ImageIO.read(new File("Environments/another-world/PNG/layered/sky.png"));
 			background = ImageIO.read(new File("Environments/another-world/PNG/layered/back-towers.png"));
@@ -51,9 +53,9 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		for(int r=0; r<locations.length; r++){
 			for(int c=0; c<locations[r].length; c++){
 				blocks[r][c] = new Block(128*c, 128*r, (locations[r][c] == 1));
-				System.out.print(locations[r][c]+" ");
+				if(blocks[r][c].isVisible())
+					blockList.add(blocks[r][c]);
 			}
-			System.out.println("");
 		}
 
 		t=new Thread(this);
@@ -67,12 +69,12 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			if(gameOn)
 			{
 				//Sprite Movement
-				if(right){
+				if(right && !rightLock){
 					skyX -= Marine.MOVE_SPEED/4;
 					bgX -= Marine.MOVE_SPEED/2;
 					Block.changeAllX(blocks, -Marine.MOVE_SPEED);
 				}
-				if(left){
+				if(left && !leftLock){
 					skyX += Marine.MOVE_SPEED/4;
 					bgX += Marine.MOVE_SPEED/2;
 					Block.changeAllX(blocks, Marine.MOVE_SPEED);
@@ -96,6 +98,33 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 				//Move Enemies 
 				for(Enemy e : enemies)
 					e.changeX(-Marine.MOVE_SPEED/2);
+
+				//Player 'Gravity'
+				marine.changeY(marine.getYVel());
+				if(marine.getY() <= marine.getYBeforeJump()-(Marine.JUMP_HEIGHT*Marine.JUMP_SPEED)){
+					marine.setYVel(Marine.JUMP_SPEED);
+					marine.STATE = marine.lastState;
+				}
+
+				//Block Collisions
+				blockUnder = rightLock = leftLock = false;
+				for(Block b : blockList){
+					if(marine.getFutureCollider(0, Marine.JUMP_SPEED).intersects(b.getCollider())){
+						marine.setYVel(0);
+						System.out.println("Down collision!"+blockList.size());
+						blockUnder = true;
+					} 
+					if(marine.getFutureCollider(Marine.MOVE_SPEED, 0).intersects(b.getCollider())){
+						rightLock = true;
+					}
+					if(marine.getFutureCollider(-Marine.MOVE_SPEED, 0).intersects(b.getCollider())){
+						leftLock = true;
+					}
+				}
+
+				if(!blockUnder && marine.STATE != Marine.State.JUMP){
+					marine.setYVel(Marine.JUMP_SPEED);
+				}
 				repaint();
 			}
 			if(restart)
@@ -140,6 +169,8 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		}else{
 			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX()+128,marine.getY(), -marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
 		}
+		g2d.setColor(Color.MAGENTA);
+		g2d.draw(marine.getCollider());
 
 		//Draw Enemies
 		for(Enemy e : enemies){
@@ -150,7 +181,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 	{
 		//37 left, 38 up, 39 right, 40 down
 		if(key.getKeyCode()==37 || key.getKeyCode()==65){	//Left || A
-			if(!right){
+			if(!leftLock && !right){
 				right = false;
 				left = true;
 				marine.right = false;
@@ -160,7 +191,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		}
 		if(key.getKeyCode()==39 || key.getKeyCode()==68){	//Right || D
 			marine.right = true;
-			if(!left){
+			if(!rightLock && !left){
 				right = true;
 				left = false;
 				marine.right = true;

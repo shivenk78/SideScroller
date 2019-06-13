@@ -5,13 +5,10 @@ import javax.imageio.ImageIO;
 public class Block extends Collider{
 
     private BufferedImage image;
-    private int x, y;
     private boolean isVisible;
 
     public Block(int x, int y, boolean isVisible){
         super(x, y, 128, 128);
-        this.x = x;
-        this.y = y;
         this.isVisible = isVisible;
 
         try {
@@ -23,13 +20,7 @@ public class Block extends Collider{
     }
 
     public BufferedImage getImage() {   return this.image;  }
-    public int getX() { return this.x;  }
-    public int getY() { return this.y;  }
     public boolean isVisible(){ return this.isVisible;   }
-
-    public void changeX(int deltaX){
-        this.x += deltaX;
-    }
 
     public static void changeAllX(Block[][] blocks, int deltaX){
         for(int r=0; r<blocks.length; r++)

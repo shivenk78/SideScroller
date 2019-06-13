@@ -10,38 +10,36 @@ public class Marine extends Collider{
 
     public static final int MOVE_SPEED = 10;
     public static final int JUMP_HEIGHT = 14;
-    private static final int JUMP_SPEED = 16;
+    public static final int JUMP_SPEED = 16;
 
-    public State STATE;
+    public State STATE, lastState;
     public boolean right;
 
-    private State lastState;
     private BufferedImage[] idles, runs, jumps;
     private Rectangle collider;
-    private int index, x, y, slowCount, jumpCount, jumpTimer;
+    private int index, slowCount, jumpCount, yBeforeJump, yVel;
 
     public Marine(int x, int y){
         super(x, y, 128, 128);
         right = true;
-        this.x = x;
-        this.y = y;
-        slowCount = 0;
+        yVel = slowCount = 0;
+        yBeforeJump = getY();
 
         collider = new Rectangle(x, y, 128, 128);
 
         STATE = State.RUN;
-        idles = new BufferedImage[4];
-        idles = ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-idle.png"), 48);
-        runs = new BufferedImage[10];
-        runs = Arrays.copyOfRange((ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-run.png"), 48)), 1, 11);
-        jumps = ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-jump.png"), 36, 48);
+        lastState = State.IDLE;
+        idles = ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-idle.png"), 48, 37);
+        runs = Arrays.copyOfRange((ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-run.png"), 48, 37)), 1, 11);
+        jumps = ImageChopper.chop(new File("Sprites/space-marine/PNG/space-marine-jump.png"), 36, 37);
     }
 
     public void jump(Marine.State prevState){
         if(STATE != State.JUMP){
             STATE = State.JUMP;
-            jumpTimer = 0;
+            yBeforeJump = getY();
             lastState = prevState;
+            setYVel(-JUMP_SPEED);
         }
     }
 
@@ -85,23 +83,20 @@ public class Marine extends Collider{
             default: return img;
         }
     }
-    @Override
-    public int getY(){
-        if(STATE == State.JUMP){
-            if(jumpTimer > 2*JUMP_HEIGHT){
-                jumpTimer = 0;
-                STATE = lastState;
-            }
-            if(jumpTimer < JUMP_HEIGHT){
-                jumpTimer++;
-                y -= JUMP_SPEED;
-            }
-            if(jumpTimer >= JUMP_HEIGHT ){
-                jumpTimer++;
-                y += JUMP_SPEED;
-            }
-        }  
-        return y;  
+
+    public void stopJump(){
+        STATE = lastState;
+        setYVel(0);
+    }
+
+    public int getYBeforeJump(){
+        return yBeforeJump;
+    }
+    public int getYVel(){
+        return yVel;
+    }
+    public void setYVel(int yVel){
+        this.yVel = yVel;
     }
 
     public enum State{

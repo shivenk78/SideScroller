@@ -4,7 +4,6 @@ public class Collider{
 
     private Rectangle collider;
     private int x, y, width, height;
-    private int xVel, yVel, yAcc;
 
     public Collider(int x, int y, int width, int height){
         this.x = x;
@@ -12,7 +11,6 @@ public class Collider{
         this.width = width;
         this.height = height;
         this.collider = new Rectangle(x, y, width, height);
-        xVel = yVel = yAcc = 0;
     }
 
     public Rectangle getCollider(){
@@ -20,7 +18,7 @@ public class Collider{
         return collider;
     }
     public Rectangle getFutureCollider(int deltaX, int deltaY){
-        return new Rectangle(x+deltaX, y+deltaY, width, height);
+        return new Rectangle(this.x+deltaX, this.y+deltaY, width, height);
     }
     public void changeX(int deltaX){
         this.x += deltaX;
@@ -31,4 +29,6 @@ public class Collider{
     
     public int getX(){  return x;  }
     public int getY(){  return y;  }
+    public void setX(int x){  this.x = x;   }
+    public void setY(int y){  this.y = y;   }
 }

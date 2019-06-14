@@ -25,6 +25,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 	private Marine marine;
 	private ArrayList<Block> blockList;
 	private ArrayList<Enemy> enemies;
+	private String endMessage;
 	private static GameRunner gameRunner;
 
 	public GameRunner() {
@@ -59,8 +60,11 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 			}
 		}
 
-		enemies.add(new Enemy(marine.getX()+1000, marine.getY()));
-		enemies.add(new Enemy(marine.getX()+2000, marine.getY()));
+		enemies.add(new Enemy(marine.getX()+5*128, 10));
+		enemies.add(new Enemy(marine.getX()+6*128, 10));
+		enemies.add(new Enemy(marine.getX()+17*128, 10));
+		enemies.add(new Enemy(marine.getX()+18*128, 10));
+		enemies.add(new Enemy(marine.getX()+19*128, 10));
 
 		t=new Thread(this);
 		t.start();
@@ -77,11 +81,13 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 					skyX -= Marine.MOVE_SPEED/4;
 					bgX -= Marine.MOVE_SPEED/2;
 					Block.changeAllX(blocks, -Marine.MOVE_SPEED);
+					Enemy.changeAllX(enemies, -Marine.MOVE_SPEED);
 				}
 				if(left && !leftLock){
 					skyX += Marine.MOVE_SPEED/4;
 					bgX += Marine.MOVE_SPEED/2;
 					Block.changeAllX(blocks, Marine.MOVE_SPEED);
+					Enemy.changeAllX(enemies, Marine.MOVE_SPEED);    
 				}
 				if(!right && !left && marine.STATE != Marine.State.JUMP)
 					marine.STATE = Marine.State.IDLE;
@@ -97,9 +103,15 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 
 				//Move Enemies 
 				for(Enemy e : enemies){
-					e.changeX(-Marine.MOVE_SPEED*2);
-					if(marine.getCollider().intersects(e.getCollider()))
-						restart = true;
+					e.changeY(Marine.MOVE_SPEED/2);
+					if(e.getY() > 710)
+						e.setY(10);
+
+					if(marine.getCollider().intersects(e.getCollider())){
+						endMessage = "GAME OVER";
+						gameOn = false;
+					}
+						
 				}
 
 				//Player 'Gravity'
@@ -107,6 +119,10 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 				if(marine.getY() <= marine.getYBeforeJump()-(Marine.JUMP_HEIGHT*Marine.JUMP_SPEED)){
 					marine.setYVel(Marine.JUMP_SPEED);
 					marine.STATE = marine.lastState;
+				}
+				if(marine.getY()>704){
+					endMessage = "GAME OVER";
+					gameOn = false;
 				}
 
 				//Block Collisions
@@ -128,13 +144,15 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 				if(!blockUnder && marine.STATE != Marine.State.JUMP){
 					marine.setYVel(Marine.JUMP_SPEED);
 				}
+
+				//Win Condition
+				if(blocks[0][blocks[0].length-1].getCollider().intersects(marine.getCollider())){
+					endMessage = "YOU WIN";
+					gameOn = false;
+				}
 				repaint();
-			}
-			if(restart)
-			{
-				restart=false;
-				System.exit(1);
-				gameOn=true;
+			}else{
+				
 			}
 			try
 			{
@@ -150,33 +168,42 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D)g;
 
-		//Draw Background Layers
-		g2d.drawImage(sky, skyX, 0, null);
-		g2d.drawImage(sky, skyX+sky.getWidth(), 0, null);
-		g2d.drawImage(sky, skyX-sky.getWidth(), 0, null);
-		g2d.drawImage(background, bgX, 0, null);
-		g2d.drawImage(background, bgX+background.getWidth(), 0, null);
-		g2d.drawImage(background, bgX-background.getWidth(), 0, null);
+		if(gameOn){
+			//Draw Background Layers
+			g2d.drawImage(sky, skyX, 0, null);
+			g2d.drawImage(sky, skyX+sky.getWidth(), 0, null);
+			g2d.drawImage(sky, skyX-sky.getWidth(), 0, null);
+			g2d.drawImage(background, bgX, 0, null);
+			g2d.drawImage(background, bgX+background.getWidth(), 0, null);
+			g2d.drawImage(background, bgX-background.getWidth(), 0, null);
 
-		//Draw Map Blocks
-		for(int r=0; r<locations.length; r++){
-			for(int c=0; c<locations[r].length; c++){
-				Block b = blocks[r][c];
-				if(b.isVisible())
-					g2d.drawImage(b.getImage().getScaledInstance(128, 128, Image.SCALE_DEFAULT), b.getX(), b.getY(), 128, 128, null);
+			g2d.setColor(Color.GREEN);
+			g2d.fill(blocks[0][blocks[0].length-1].getCollider());
+
+			//Draw Map Blocks
+			for(int r=0; r<locations.length; r++){
+				for(int c=0; c<locations[r].length; c++){
+					Block b = blocks[r][c];
+					if(b.isVisible())
+						g2d.drawImage(b.getImage().getScaledInstance(128, 128, Image.SCALE_DEFAULT), b.getX(), b.getY(), 128, 128, null);
+				}
 			}
-		}
 
-		//Draw Sprites
-		if(marine.right){
-			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
+			//Draw Sprites
+			if(marine.right){
+				g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX(),marine.getY(), marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
+			}else{
+				g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX()+128,marine.getY(), -marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
+			}
+
+			//Draw Enemies
+			for(Enemy e : enemies){
+				g2d.drawImage(e.getImage().getScaledInstance(128, 128, Image.SCALE_DEFAULT), e.getX(), e.getY(), -128, 128, null);
+			}
 		}else{
-			g2d.drawImage(marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT), marine.getX()+128,marine.getY(), -marine.getImage().getScaledInstance(-128, 128, Image.SCALE_DEFAULT).getWidth(null), 128, null);
-		}
-
-		//Draw Enemies
-		for(Enemy e : enemies){
-			g2d.drawImage(e.getImage().getScaledInstance(128, 128, Image.SCALE_DEFAULT), e.getX(), e.getY(), -128, 128, null);
+			g2d.setColor(Color.RED);
+			g2d.setFont(new Font("Times New Roman", 10, 100));
+			g2d.drawString(endMessage, 200, 200);
 		}
 	}
 	public void keyPressed(KeyEvent key)
@@ -202,7 +229,7 @@ public class GameRunner extends JPanel implements KeyListener, Runnable {
 				marine.STATE = Marine.State.RUN;
 		}
 		if(key.getKeyCode()==32){	//Space
-			if(marine.STATE != Marine.State.JUMP)
+			if(marine.STATE != Marine.State.JUMP && marine.getYVel() == 0)
 				marine.jump(marine.STATE);
 		}
 		if(key.getKeyCode()==82)

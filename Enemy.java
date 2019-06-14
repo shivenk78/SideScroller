@@ -1,5 +1,6 @@
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
 
 public class Enemy extends Collider {
 
@@ -26,5 +27,10 @@ public class Enemy extends Collider {
             slowCount=0;
         }
         return img;
+    }
+
+    public static void changeAllX(ArrayList<Enemy> list, int deltaX){
+        for(Enemy e : list)
+            e.changeX(deltaX);
     }
 }
